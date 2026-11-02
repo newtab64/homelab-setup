@@ -61,14 +61,14 @@ ssh-copy-id -p 22 user@serverip
 Confirm key login works before running the setup script!
 
 ### Key settings in `configs/sshd_config`:
-- `AddressFamily inet` — IPv4 only (strictly refuses IPv6 connections).
-- `Port 22` — Default SSH port (change to custom port if desired).
-- `PermitRootLogin no` — Disables direct root login.
-- `PasswordAuthentication no` — Keys only.
-- `MaxAuthTries 3` — Drops connection after 3 failed attempts.
-- `LoginGraceTime 30` — Closes unauthenticated sessions after 30 seconds.
-- `ClientAliveInterval 300` / `ClientAliveCountMax 2` — Prunes disconnected sessions.
-- `AllowAgentForwarding no` / `PermitUserEnvironment no` — Minimizes attack surface.
+- `AddressFamily inet`: IPv4 only (strictly refuses IPv6 connections).
+- `Port 22`: Default SSH port (change to custom port if desired).
+- `PermitRootLogin no`: Disables direct root login.
+- `PasswordAuthentication no`: Keys only.
+- `MaxAuthTries 3`: Drops connection after 3 failed attempts.
+- `LoginGraceTime 30`: Closes unauthenticated sessions after 30 seconds.
+- `ClientAliveInterval 300` / `ClientAliveCountMax 2`: Prunes disconnected sessions.
+- `AllowAgentForwarding no` / `PermitUserEnvironment no`: Minimizes attack surface.
 
 The setup script automatically backs up your existing `/etc/ssh/sshd_config` to `/etc/ssh/sshd_config_backups/`, validates the new configuration with `sshd -t`, and rolls back automatically if validation fails.
 

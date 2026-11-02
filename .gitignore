@@ -9,5 +9,7 @@
 .DS_Store
 Thumbs.db
 
-# Local tooling scratch
+# Superpowers artifacts and local tooling
 .superpowers/
+docs/superpowers/
+docs/

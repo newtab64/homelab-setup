@@ -63,6 +63,10 @@ status=0
 [[ -x "$REPO_DIR/homelab-setup.sh" ]] || status=$?
 assert_status "homelab-setup.sh is executable" "0" "$status"
 
+status=0
+[[ -x "$REPO_DIR/configs/homelab-autoupdate.sh" ]] || status=$?
+assert_status "configs/homelab-autoupdate.sh is executable" "0" "$status"
+
 echo
 echo "=== 2. Checking Bash Syntax ==="
 

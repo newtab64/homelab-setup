@@ -140,6 +140,20 @@ status=0
 validate_yn "invalid" "y" >/dev/null 2>&1 || status=$?
 assert_status "'invalid' returns 2" "2" "$status"
 
+# Test prompt parsing pattern used in homelab-setup.sh
+status=0
+res="$(validate_yn "n" "y" 2>/dev/null)" || status=$?
+assert_eq "Prompt pattern with 'n' resolves to 'n'" "n" "$res"
+status_valid=0
+(( status <= 1 )) || status_valid=1
+assert_status "Prompt pattern with 'n' is accepted as valid input" "0" "$status_valid"
+
+status=0
+res="$(validate_yn "invalid" "y" 2>/dev/null)" || status=$?
+status_valid=0
+(( status <= 1 )) || status_valid=1
+assert_status "Prompt pattern with 'invalid' is rejected as invalid input" "1" "$status_valid"
+
 # 2. validate_threshold tests
 echo "Testing validate_threshold..."
 status=0

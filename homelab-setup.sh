@@ -138,7 +138,9 @@ if validate_yn "$is_laptop_reply" "n" >/dev/null 2>&1 && [[ "$(validate_yn "$is_
     # Prompt for lid switch
     while true; do
         read -rp "  Ignore lid-close suspend (keep server running when lid is shut)? [Y/n]: " lid_reply
-        if parsed_lid="$(validate_yn "$lid_reply" "y" 2>/dev/null)"; then
+        status=0
+        parsed_lid="$(validate_yn "$lid_reply" "y" 2>/dev/null)" || status=$?
+        if (( status <= 1 )); then
             CONFIGURE_LID="$parsed_lid"
             break
         fi
@@ -148,7 +150,9 @@ if validate_yn "$is_laptop_reply" "n" >/dev/null 2>&1 && [[ "$(validate_yn "$is_
     # Prompt for TLP
     while true; do
         read -rp "  Install TLP for battery charge thresholds and powersave mode? [Y/n]: " tlp_reply
-        if parsed_tlp="$(validate_yn "$tlp_reply" "y" 2>/dev/null)"; then
+        status=0
+        parsed_tlp="$(validate_yn "$tlp_reply" "y" 2>/dev/null)" || status=$?
+        if (( status <= 1 )); then
             CONFIGURE_TLP="$parsed_tlp"
             break
         fi

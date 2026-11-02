@@ -273,7 +273,9 @@ echo
 echo "--- 5. Fail2ban ---"
 apt-get install -y fail2ban
 cp "$CONFIGS/jail.local" /etc/fail2ban/jail.local
+systemctl enable --now fail2ban || true
 systemctl restart fail2ban
+sleep 2
 fail2ban-client status sshd || true
 
 # ---------- 6. SSH Hardening (Strict IPv4) ----------

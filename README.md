@@ -15,7 +15,6 @@ homelab-setup/
 ├── README.md
 ├── homelab-setup.sh
 ├── configs/
-│   ├── homelab-autoupdate.sh
 │   ├── jail.local
 │   └── sshd_config
 └── tests/
@@ -29,21 +28,27 @@ Want to customize settings (SSH port, ban times, battery thresholds)? Fork this 
 
 ## 1. Daily Auto-Update & Maintenance
 
-Replaces heavy unattended-upgrades with a clean shell script executed daily at **00:00** via `/etc/cron.d/homelab-autoupdate`.
+Replaces heavy unattended-upgrades by adding a daily maintenance entry directly to root's crontab (`crontab -e`) scheduled at **00:00**. No external scripts are placed on the system.
 
-The maintenance script (`/usr/local/bin/homelab-autoupdate.sh`) executes:
-1. `apt-get update`
-2. `apt-get upgrade -y`
-3. `apt-get autoremove --purge -y`
-4. `apt-get autoclean`
-5. `sync`
-6. `shutdown -r now` (or `reboot`)
-
-All output is logged with timestamps to `/var/log/homelab-autoupdate.log`.
-
-To run maintenance immediately on-demand:
+The cron command runs non-interactively:
 ```bash
-sudo /usr/local/bin/homelab-autoupdate.sh
+0 0 * * * DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && apt-get autoremove --purge -y && apt-get autoclean && sync && (shutdown -r now || reboot) >> /var/log/homelab-autoupdate.log 2>&1
+```
+
+1. Updates package lists: `apt-get update`
+2. Upgrades installed packages: `apt-get upgrade -y`
+3. Purges orphan dependencies: `apt-get autoremove --purge -y`
+4. Cleans local repository cache: `apt-get autoclean`
+5. Flushes disk caches: `sync`
+6. Reboots the system: `shutdown -r now` (or `reboot`)
+
+All output is appended to `/var/log/homelab-autoupdate.log`.
+
+To view or edit the scheduled job at any time:
+```bash
+sudo crontab -l
+# or edit:
+sudo crontab -e
 ```
 
 ---
@@ -153,7 +158,7 @@ bash tests/test_homelab_setup.sh
 - [ ] SSH key generated on local PC and copied to server
 - [ ] Confirmed SSH key login works before disabling passwords
 - [ ] Base setup run (`sudo ./homelab-setup.sh`)
-- [ ] Auto-update cron job verified in `/etc/cron.d/homelab-autoupdate`
+- [ ] Auto-update cron job verified in root crontab (`sudo crontab -l`)
 - [ ] UFW enabled and IPv4-only verified (`sudo ufw status verbose`)
 - [ ] Fail2ban active (`sudo fail2ban-client status sshd`)
 - [ ] Tested SSH connection in a new terminal window

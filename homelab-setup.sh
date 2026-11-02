@@ -98,7 +98,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIGS="$REPO_DIR/configs"
 SSHD_CONFIG_LIVE="/etc/ssh/sshd_config"
 
-for f in homelab-autoupdate.sh jail.local sshd_config; do
+for f in jail.local sshd_config; do
     if [[ ! -f "$CONFIGS/$f" ]]; then
         echo "Missing $CONFIGS/$f -- is this repo intact?" >&2
         exit 1
@@ -195,20 +195,15 @@ echo
 echo "Applying updates and configurations..."
 apt-get update
 
-# ---------- 1. Auto-update & reboot cron job ----------
+# ---------- 1. Auto-update & Daily Reboot Setup (crontab) ----------
 echo
-echo "--- 1. Auto-update & Daily Reboot Setup ---"
-cp "$CONFIGS/homelab-autoupdate.sh" /usr/local/bin/homelab-autoupdate.sh
-chmod 755 /usr/local/bin/homelab-autoupdate.sh
+echo "--- 1. Auto-update & Daily Reboot Setup (crontab) ---"
+CRON_TAG="# homelab-autoupdate"
+CRON_CMD="0 0 * * * DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && apt-get autoremove --purge -y && apt-get autoclean && sync && (shutdown -r now || reboot) >> /var/log/homelab-autoupdate.log 2>&1 $CRON_TAG"
 
-cat << 'EOF' > /etc/cron.d/homelab-autoupdate
-# /etc/cron.d/homelab-autoupdate
-# Runs daily homelab maintenance (apt update, upgrade, cleanup, and reboot)
-0 0 * * * root /usr/local/bin/homelab-autoupdate.sh >> /var/log/homelab-autoupdate.log 2>&1
-EOF
-chmod 644 /etc/cron.d/homelab-autoupdate
-echo "  Installed /usr/local/bin/homelab-autoupdate.sh"
-echo "  Scheduled daily run at 00:00 in /etc/cron.d/homelab-autoupdate"
+# Configure root crontab directly without placing extra scripts on the system
+(crontab -l 2>/dev/null | grep -F -v "$CRON_TAG" || true; echo "$CRON_CMD") | crontab -
+echo "  Configured root crontab to run daily update and reboot at 00:00."
 
 # ---------- 2. Laptop Lid Switch Handling (Optional) ----------
 if [[ "$CONFIGURE_LID" == "y" ]]; then

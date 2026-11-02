@@ -53,7 +53,7 @@ assert_file_contains() {
 
 echo "=== 1. Checking File Existence & Permissions ==="
 
-for f in homelab-setup.sh configs/homelab-autoupdate.sh configs/jail.local configs/sshd_config; do
+for f in homelab-setup.sh configs/jail.local configs/sshd_config; do
     status=0
     [[ -f "$REPO_DIR/$f" ]] || status=$?
     assert_status "File exists: $f" "0" "$status"
@@ -63,14 +63,10 @@ status=0
 [[ -x "$REPO_DIR/homelab-setup.sh" ]] || status=$?
 assert_status "homelab-setup.sh is executable" "0" "$status"
 
-status=0
-[[ -x "$REPO_DIR/configs/homelab-autoupdate.sh" ]] || status=$?
-assert_status "configs/homelab-autoupdate.sh is executable" "0" "$status"
-
 echo
 echo "=== 2. Checking Bash Syntax ==="
 
-for f in homelab-setup.sh configs/homelab-autoupdate.sh tests/test_validation.sh; do
+for f in homelab-setup.sh tests/test_validation.sh; do
     status=0
     bash -n "$REPO_DIR/$f" || status=$?
     assert_status "Syntax valid: $f" "0" "$status"
@@ -106,13 +102,22 @@ echo "=== 5. Mock Testing Target File Generations ==="
 TEST_DIR="/tmp/test_homelab_root_$(date +%s)"
 mkdir -p "$TEST_DIR/etc/cron.d" "$TEST_DIR/etc/systemd/logind.conf.d" "$TEST_DIR/etc/tlp.d" "$TEST_DIR/etc/default"
 
-# Test cron file generation
-cat << 'EOF' > "$TEST_DIR/etc/cron.d/homelab-autoupdate"
-# /etc/cron.d/homelab-autoupdate
-# Runs daily homelab maintenance (apt update, upgrade, cleanup, and reboot)
-0 0 * * * root /usr/local/bin/homelab-autoupdate.sh >> /var/log/homelab-autoupdate.log 2>&1
-EOF
-assert_file_contains "Cron file contains daily 00:00 schedule" "^0 0 \* \* \* root /usr/local/bin/homelab-autoupdate.sh >> /var/log/homelab-autoupdate.log 2>&1" "$TEST_DIR/etc/cron.d/homelab-autoupdate"
+# Test crontab line generation and idempotent replacement
+MOCK_CRONTAB_BEFORE="0 2 * * * /usr/bin/some-other-job"
+CRON_TAG="# homelab-autoupdate"
+CRON_CMD="0 0 * * * DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && apt-get autoremove --purge -y && apt-get autoclean && sync && (shutdown -r now || reboot) >> /var/log/homelab-autoupdate.log 2>&1 $CRON_TAG"
+
+# First insertion
+RESULT_1="$( (echo "$MOCK_CRONTAB_BEFORE" | grep -F -v "$CRON_TAG" || true; echo "$CRON_CMD") )"
+echo "$RESULT_1" > "$TEST_DIR/crontab.test"
+assert_file_contains "Crontab includes existing job" "some-other-job" "$TEST_DIR/crontab.test"
+assert_file_contains "Crontab includes homelab-autoupdate command" "^0 0 \* \* \* .* >> /var/log/homelab-autoupdate.log" "$TEST_DIR/crontab.test"
+
+# Second insertion (idempotency check - should not duplicate)
+RESULT_2="$( (cat "$TEST_DIR/crontab.test" | grep -F -v "$CRON_TAG" || true; echo "$CRON_CMD") )"
+echo "$RESULT_2" > "$TEST_DIR/crontab.test"
+CRON_OCCURRENCES="$(grep -c "homelab-autoupdate" "$TEST_DIR/crontab.test")"
+assert_eq "Crontab has exactly 1 entry for homelab-autoupdate" "1" "$CRON_OCCURRENCES"
 
 # Test lid ignore file generation
 cat << 'EOF' > "$TEST_DIR/etc/systemd/logind.conf.d/00-homelab-lid.conf"

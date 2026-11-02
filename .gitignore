@@ -1,0 +1,13 @@
+# Logs and backups
+*.log
+*.bak
+
+# Temporary and editor files
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local tooling scratch
+.superpowers/

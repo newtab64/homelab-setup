@@ -102,7 +102,7 @@ Monitors authentication logs for repeated failed attempts and bans offending IPs
 When repurposing old laptops as 24/7 homelab nodes, `homelab-setup.sh` offers two optional configurations:
 
 ### A. Ignore Lid Switch
-Closing the laptop lid normally suspends the machine. The script can configure systemd logind (`/etc/systemd/logind.conf.d/00-homelab-lid.conf`):
+Closing the laptop lid normally suspends the machine. The script directly updates `/etc/systemd/logind.conf`:
 - `HandleLidSwitch=ignore`
 - `HandleLidSwitchExternalPower=ignore`
 - `HandleLidSwitchDocked=ignore`

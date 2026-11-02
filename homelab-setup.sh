@@ -209,17 +209,30 @@ echo "  Configured root crontab to run daily update and reboot at 00:00."
 if [[ "$CONFIGURE_LID" == "y" ]]; then
     echo
     echo "--- 2. Laptop Lid Handling ---"
-    mkdir -p /etc/systemd/logind.conf.d
-    cat << 'EOF' > /etc/systemd/logind.conf.d/00-homelab-lid.conf
+    LOGIND_CONF="/etc/systemd/logind.conf"
+    if [[ -f "$LOGIND_CONF" ]]; then
+        sed -i -E 's/^#?[[:space:]]*HandleLidSwitch=.*/HandleLidSwitch=ignore/' "$LOGIND_CONF"
+        sed -i -E 's/^#?[[:space:]]*HandleLidSwitchExternalPower=.*/HandleLidSwitchExternalPower=ignore/' "$LOGIND_CONF"
+        sed -i -E 's/^#?[[:space:]]*HandleLidSwitchDocked=.*/HandleLidSwitchDocked=ignore/' "$LOGIND_CONF"
+        sed -i -E 's/^#?[[:space:]]*LidSwitchIgnoreInhibited=.*/LidSwitchIgnoreInhibited=yes/' "$LOGIND_CONF"
+
+        grep -q '^HandleLidSwitch=' "$LOGIND_CONF" || echo 'HandleLidSwitch=ignore' >> "$LOGIND_CONF"
+        grep -q '^HandleLidSwitchExternalPower=' "$LOGIND_CONF" || echo 'HandleLidSwitchExternalPower=ignore' >> "$LOGIND_CONF"
+        grep -q '^HandleLidSwitchDocked=' "$LOGIND_CONF" || echo 'HandleLidSwitchDocked=ignore' >> "$LOGIND_CONF"
+        grep -q '^LidSwitchIgnoreInhibited=' "$LOGIND_CONF" || echo 'LidSwitchIgnoreInhibited=yes' >> "$LOGIND_CONF"
+    else
+        cat << 'EOF' > "$LOGIND_CONF"
 [Login]
 HandleLidSwitch=ignore
 HandleLidSwitchExternalPower=ignore
 HandleLidSwitchDocked=ignore
 LidSwitchIgnoreInhibited=yes
 EOF
-    echo "  Installed /etc/systemd/logind.conf.d/00-homelab-lid.conf"
+    fi
+    rm -f /etc/systemd/logind.conf.d/00-homelab-lid.conf
+    echo "  Updated /etc/systemd/logind.conf directly to ignore lid-close events."
     systemctl restart systemd-logind || true
-    echo "  Reloaded systemd-logind to ignore lid-close events."
+    echo "  Reloaded systemd-logind."
 fi
 
 # ---------- 3. TLP Power & Battery Protection (Optional) ----------

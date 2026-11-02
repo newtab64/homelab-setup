@@ -119,16 +119,25 @@ echo "$RESULT_2" > "$TEST_DIR/crontab.test"
 CRON_OCCURRENCES="$(grep -c "homelab-autoupdate" "$TEST_DIR/crontab.test")"
 assert_eq "Crontab has exactly 1 entry for homelab-autoupdate" "1" "$CRON_OCCURRENCES"
 
-# Test lid ignore file generation
-cat << 'EOF' > "$TEST_DIR/etc/systemd/logind.conf.d/00-homelab-lid.conf"
+# Test direct logind.conf modification
+mkdir -p "$TEST_DIR/etc/systemd"
+cat << 'EOF' > "$TEST_DIR/etc/systemd/logind.conf"
 [Login]
-HandleLidSwitch=ignore
-HandleLidSwitchExternalPower=ignore
-HandleLidSwitchDocked=ignore
-LidSwitchIgnoreInhibited=yes
+#HandleLidSwitch=suspend
+#HandleLidSwitchExternalPower=suspend
+#HandleLidSwitchDocked=ignore
+#LidSwitchIgnoreInhibited=yes
 EOF
-assert_file_contains "Logind drop-in contains HandleLidSwitch=ignore" "^HandleLidSwitch=ignore" "$TEST_DIR/etc/systemd/logind.conf.d/00-homelab-lid.conf"
-assert_file_contains "Logind drop-in contains LidSwitchIgnoreInhibited=yes" "^LidSwitchIgnoreInhibited=yes" "$TEST_DIR/etc/systemd/logind.conf.d/00-homelab-lid.conf"
+
+sed -i -E 's/^#?[[:space:]]*HandleLidSwitch=.*/HandleLidSwitch=ignore/' "$TEST_DIR/etc/systemd/logind.conf"
+sed -i -E 's/^#?[[:space:]]*HandleLidSwitchExternalPower=.*/HandleLidSwitchExternalPower=ignore/' "$TEST_DIR/etc/systemd/logind.conf"
+sed -i -E 's/^#?[[:space:]]*HandleLidSwitchDocked=.*/HandleLidSwitchDocked=ignore/' "$TEST_DIR/etc/systemd/logind.conf"
+sed -i -E 's/^#?[[:space:]]*LidSwitchIgnoreInhibited=.*/LidSwitchIgnoreInhibited=yes/' "$TEST_DIR/etc/systemd/logind.conf"
+
+assert_file_contains "logind.conf contains HandleLidSwitch=ignore" "^HandleLidSwitch=ignore" "$TEST_DIR/etc/systemd/logind.conf"
+assert_file_contains "logind.conf contains HandleLidSwitchExternalPower=ignore" "^HandleLidSwitchExternalPower=ignore" "$TEST_DIR/etc/systemd/logind.conf"
+assert_file_contains "logind.conf contains HandleLidSwitchDocked=ignore" "^HandleLidSwitchDocked=ignore" "$TEST_DIR/etc/systemd/logind.conf"
+assert_file_contains "logind.conf contains LidSwitchIgnoreInhibited=yes" "^LidSwitchIgnoreInhibited=yes" "$TEST_DIR/etc/systemd/logind.conf"
 
 # Test TLP file generation (replaces /etc/tlp.conf with max 4 lines)
 START=45

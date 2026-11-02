@@ -227,16 +227,14 @@ if [[ "$CONFIGURE_TLP" == "y" ]]; then
     echo
     echo "--- 3. TLP Battery Management ---"
     apt-get install -y tlp
-    mkdir -p /etc/tlp.d
-    cat << EOF > /etc/tlp.d/00-homelab.conf
-# /etc/tlp.d/00-homelab.conf
-# Battery longevity thresholds and powersave governors for 24/7 homelab node
+    rm -f /etc/tlp.conf
+    cat << EOF > /etc/tlp.conf
 START_CHARGE_THRESH_BAT0=${TLP_START}
 STOP_CHARGE_THRESH_BAT0=${TLP_STOP}
 CPU_SCALING_GOVERNOR_ON_AC=powersave
-CPU_ENERGY_PERF_POLICY_ON_AC=power
+CPU_SCALING_GOVERNOR_ON_BAT=powersave
 EOF
-    echo "  Configured TLP (BAT0: ${TLP_START}%-${TLP_STOP}%, governor: powersave)."
+    echo "  Configured /etc/tlp.conf (BAT0: ${TLP_START}%-${TLP_STOP}%, powersave on AC/BAT)."
     systemctl enable --now tlp || true
     tlp start || true
 fi

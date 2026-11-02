@@ -130,18 +130,22 @@ EOF
 assert_file_contains "Logind drop-in contains HandleLidSwitch=ignore" "^HandleLidSwitch=ignore" "$TEST_DIR/etc/systemd/logind.conf.d/00-homelab-lid.conf"
 assert_file_contains "Logind drop-in contains LidSwitchIgnoreInhibited=yes" "^LidSwitchIgnoreInhibited=yes" "$TEST_DIR/etc/systemd/logind.conf.d/00-homelab-lid.conf"
 
-# Test TLP file generation
+# Test TLP file generation (replaces /etc/tlp.conf with max 4 lines)
 START=45
 STOP=50
-cat << EOF > "$TEST_DIR/etc/tlp.d/00-homelab.conf"
+rm -f "$TEST_DIR/etc/tlp.conf"
+cat << EOF > "$TEST_DIR/etc/tlp.conf"
 START_CHARGE_THRESH_BAT0=${START}
 STOP_CHARGE_THRESH_BAT0=${STOP}
 CPU_SCALING_GOVERNOR_ON_AC=powersave
-CPU_ENERGY_PERF_POLICY_ON_AC=power
+CPU_SCALING_GOVERNOR_ON_BAT=powersave
 EOF
-assert_file_contains "TLP file contains START_CHARGE_THRESH_BAT0=45" "^START_CHARGE_THRESH_BAT0=45" "$TEST_DIR/etc/tlp.d/00-homelab.conf"
-assert_file_contains "TLP file contains STOP_CHARGE_THRESH_BAT0=50" "^STOP_CHARGE_THRESH_BAT0=50" "$TEST_DIR/etc/tlp.d/00-homelab.conf"
-assert_file_contains "TLP file sets CPU_SCALING_GOVERNOR_ON_AC=powersave" "^CPU_SCALING_GOVERNOR_ON_AC=powersave" "$TEST_DIR/etc/tlp.d/00-homelab.conf"
+TLP_LINES="$(wc -l < "$TEST_DIR/etc/tlp.conf")"
+assert_status "TLP config has maximum 4 lines" "0" "$([ "$TLP_LINES" -le 4 ] && echo 0 || echo 1)"
+assert_file_contains "TLP file contains START_CHARGE_THRESH_BAT0=45" "^START_CHARGE_THRESH_BAT0=45" "$TEST_DIR/etc/tlp.conf"
+assert_file_contains "TLP file contains STOP_CHARGE_THRESH_BAT0=50" "^STOP_CHARGE_THRESH_BAT0=50" "$TEST_DIR/etc/tlp.conf"
+assert_file_contains "TLP file sets CPU_SCALING_GOVERNOR_ON_AC=powersave" "^CPU_SCALING_GOVERNOR_ON_AC=powersave" "$TEST_DIR/etc/tlp.conf"
+assert_file_contains "TLP file sets CPU_SCALING_GOVERNOR_ON_BAT=powersave" "^CPU_SCALING_GOVERNOR_ON_BAT=powersave" "$TEST_DIR/etc/tlp.conf"
 
 # Test UFW IPV6=no substitution
 echo 'IPV6=yes' > "$TEST_DIR/etc/default/ufw"

@@ -111,11 +111,13 @@ Closing the laptop lid normally suspends the machine. The script can configure s
 This allows keeping the laptop screen closed without interrupting running services.
 
 ### B. TLP Battery Charge Thresholds & Powersave
-Keeping laptop batteries plugged into AC at 100% capacity accelerates battery degradation and swelling. The script installs `tlp` and lets you set custom charge thresholds:
-- Default start charge: `45%`
-- Default stop charge: `50%`
-- CPU governor on AC: `powersave`
-- CPU energy performance policy: `power`
+Keeping laptop batteries plugged into AC at 100% capacity accelerates battery degradation and swelling. The script installs `tlp`, replaces `/etc/tlp.conf` directly with a clean 4-line configuration based on your choices:
+- `START_CHARGE_THRESH_BAT0=45` (default: 45)
+- `STOP_CHARGE_THRESH_BAT0=50` (default: 50)
+- `CPU_SCALING_GOVERNOR_ON_AC=powersave`
+- `CPU_SCALING_GOVERNOR_ON_BAT=powersave`
+
+This enforces powersave on both AC and battery, keeping temperatures, power consumption, and fan noise minimal.
 
 Check battery health and threshold status anytime with:
 ```bash

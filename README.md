@@ -83,7 +83,7 @@ The setup script automatically backs up your existing `/etc/ssh/sshd_config` to 
 
 UFW blocks all unsolicited incoming traffic while allowing outbound connections:
 - Enforces IPv4 only (`IPV6=no` in `/etc/default/ufw`).
-- Opens the SSH port configured in `configs/sshd_config`.
+- Rate limits the SSH port (`ufw limit 22/tcp`), blocking IPs with 6 or more connection attempts in 30 seconds.
 - Sets default policy: deny incoming, allow outgoing.
 
 ---

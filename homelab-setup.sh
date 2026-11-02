@@ -115,7 +115,7 @@ echo "=================================================="
 echo "This will apply the following base configuration:"
 echo "  - Daily auto-update and reboot cron job (00:00)"
 echo "  - Strict IPv4 SSH hardening (${SSH_PORT}/tcp, keys only)"
-echo "  - UFW firewall (IPv4 only, incoming default deny, allow ${SSH_PORT}/tcp)"
+echo "  - UFW firewall (IPv4 only, incoming default deny, rate-limit ${SSH_PORT}/tcp)"
 echo "  - Fail2ban with the sshd jail"
 echo
 
@@ -262,7 +262,7 @@ if [[ -f /etc/default/ufw ]]; then
     sed -i 's/^IPV6=.*/IPV6=no/' /etc/default/ufw
 fi
 
-ufw allow "${SSH_PORT}/tcp"
+ufw limit "${SSH_PORT}/tcp"
 ufw default deny incoming
 ufw default allow outgoing
 ufw --force enable

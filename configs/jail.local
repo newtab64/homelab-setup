@@ -1,0 +1,11 @@
+# Drop this file in /etc/fail2ban/jail.local
+# Apply with: sudo systemctl restart fail2ban
+
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
+bantime  = 604800
+findtime = 300
+maxretry = 3
+
+[sshd]
+enabled = true

@@ -1,0 +1,17 @@
+# Sample /etc/apt/apt.conf.d/50unattended-upgrades
+# Trimmed to the settings people usually actually change.
+# The full default file (with every option documented) is installed
+# alongside this one when you `apt install unattended-upgrades`.
+
+Unattended-Upgrade::Allowed-Origins {
+        "${distro_id}:${distro_codename}-security";
+};
+
+// Automatically reboot if a package requires it (e.g. a new kernel).
+// Off by default because unexpected reboots on a live server can be
+// disruptive. Flip to "true" if that's fine for your setup.
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+
+// Remove unused dependencies after upgrades.
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
